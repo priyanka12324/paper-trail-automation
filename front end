@@ -1,1 +1,42 @@
+CC       = gcc
+CXX      = g++
+CFLAGS   = -std=c11 -Wall -Wextra -O2 -Isrc
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -Isrc
+ifeq ($(OS),Windows_NT)
+LDFLAGS  = -lbcrypt
+endif
 
+BUILD   = build
+C_SRC   = src/queue/circular_queue.c
+CXX_SRC = src/crypto/csprng.cpp src/crypto/keys.cpp src/crypto/transform.cpp src/crypto/cipher.cpp
+OBJS    = $(patsubst src/%.c,$(BUILD)/%.o,$(C_SRC)) $(patsubst src/%.cpp,$(BUILD)/%.o,$(CXX_SRC))
+
+all: $(BUILD)/hes
+
+$(BUILD)/hes: $(OBJS) $(BUILD)/main.o
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+$(BUILD)/%.o: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/test_queue: tests/test_queue.c src/queue/circular_queue.c
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(BUILD)/test_cipher: tests/test_cipher.cpp $(OBJS)
+	@mkdir -p $(BUILD)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+
+test: $(BUILD)/test_queue $(BUILD)/test_cipher
+	./$(BUILD)/test_queue
+	./$(BUILD)/test_cipher
+
+clean:
+	rm -rf $(BUILD)
+
+.PHONY: all test clean
