@@ -1,4 +1,4 @@
-# Paper Trail Automation
+# Paper Trail auto
 
 AI-powered knowledge management platform that turns workplace conversations into verified, searchable internal documentation.
 
